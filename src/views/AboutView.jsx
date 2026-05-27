@@ -1,4 +1,4 @@
-import { motion, useScroll, useTransform, animate, useMotionValue, useInView } from "motion/react";
+import { motion, useScroll, useTransform, animate, useMotionValue, useInView, AnimatePresence } from "motion/react";
 import { useOutletContext } from "react-router";
 import { useRef, useEffect, useState } from "react";
 import { FaFacebook, FaWhatsapp, FaXTwitter, FaPhone } from "react-icons/fa6";
@@ -10,6 +10,247 @@ import {
   MdPlayCircle,
 } from "react-icons/md";
 import { HiOutlineUserGroup } from "react-icons/hi2";
+import { ChevronLeft, ChevronRight, ChevronDown, Sparkles } from "lucide-react";
+
+/* ─── FONDO OSCURO CON DEGRADADO Y HUMO ────────────────────────────────────── */
+function DarkSmokeBackground({ primaryColor, secondaryColor }) {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Degradado base oscuro con colores institucionales */}
+      <div 
+        className="absolute inset-0"
+        style={{
+          background: `
+            radial-gradient(ellipse at top, ${primaryColor}15 0%, transparent 50%),
+            radial-gradient(ellipse at bottom right, ${secondaryColor}20 0%, transparent 50%),
+            linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 50%, #16213e 100%)
+          `
+        }}
+      />
+
+      {/* Humo 1 - Arriba izquierda */}
+      <motion.div
+        className="absolute w-[800px] h-[800px] rounded-full blur-3xl"
+        style={{
+          background: `radial-gradient(circle, ${primaryColor}25 0%, transparent 70%)`,
+          top: "-20%",
+          left: "-10%"
+        }}
+        animate={{
+          x: [0, 40, 0, -40, 0],
+          y: [0, -30, 0, 30, 0],
+          scale: [1, 1.15, 1, 1.1, 1],
+          opacity: [0.2, 0.35, 0.2, 0.3, 0.2]
+        }}
+        transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      {/* Humo 2 - Abajo derecha */}
+      <motion.div
+        className="absolute w-[700px] h-[700px] rounded-full blur-3xl"
+        style={{
+          background: `radial-gradient(circle, ${secondaryColor}30 0%, transparent 70%)`,
+          bottom: "-15%",
+          right: "-5%"
+        }}
+        animate={{
+          x: [0, -35, 0, 35, 0],
+          y: [0, 40, 0, -40, 0],
+          scale: [1, 1.2, 1, 1.1, 1],
+          opacity: [0.15, 0.3, 0.15, 0.25, 0.15]
+        }}
+        transition={{ duration: 30, repeat: Infinity, ease: "easeInOut", delay: 3 }}
+      />
+
+      {/* Partículas decorativas */}
+      {[...Array(6)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute w-1.5 h-1.5 rounded-full"
+          style={{
+            background: i % 2 === 0 ? primaryColor : secondaryColor,
+            top: `${Math.random() * 100}%`,
+            left: `${Math.random() * 100}%`,
+            opacity: 0.15
+          }}
+          animate={{
+            y: [0, -80, 0],
+            x: [0, Math.random() * 40 - 20, 0],
+            opacity: [0.15, 0.3, 0.15]
+          }}
+          transition={{
+            duration: 12 + Math.random() * 8,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: i * 1.5
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ─── HERO CON PORTADA PANTALLA COMPLETA ─────────────────────────────────── */
+function PortadaHero({ portadas = [], institucion, primaryColor, secondaryColor }) {
+  const [current, setCurrent] = useState(0);
+  
+  const portadasFiltradas = portadas.length > 0 ? portadas : [];
+
+  useEffect(() => {
+    if (portadasFiltradas.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % portadasFiltradas.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [portadasFiltradas.length]);
+
+  if (portadasFiltradas.length === 0) {
+    return (
+      <div 
+        className="relative h-screen w-full flex items-center justify-center text-center px-4"
+        style={{ 
+          background: `linear-gradient(135deg, ${primaryColor}20, ${secondaryColor}20)` 
+        }}
+      >
+        <div className="relative z-10 max-w-4xl">
+          <MdOutlineSchool size={80} style={{ color: primaryColor }} className="mx-auto mb-6 opacity-60" />
+          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black text-white drop-shadow-2xl mb-6">
+            Sobre la Carrera
+          </h1>
+          <p className="text-white/70 text-xl sm:text-2xl lg:text-3xl">
+            {institucion?.institucion_nombre ?? "Universidad Pública de El Alto"}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative h-screen w-full overflow-hidden">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={current}
+          initial={{ opacity: 0, scale: 1.1 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          transition={{ duration: 0.8 }}
+          className="absolute inset-0"
+        >
+          <img
+            src={portadasFiltradas[current].portada_imagen}
+            alt={portadasFiltradas[current].portada_titulo || "Portada"}
+            className="w-full h-full object-cover"
+          />
+          <div 
+            className="absolute inset-0"
+            style={{
+              background: `
+                linear-gradient(180deg, 
+                  rgba(15,15,15,0.3) 0%, 
+                  rgba(26,26,46,0.6) 50%, 
+                  rgba(15,15,15,0.95) 100%
+                ),
+                radial-gradient(ellipse at bottom, ${primaryColor}50 0%, transparent 70%)
+              `
+            }}
+          />
+        </motion.div>
+      </AnimatePresence>
+
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.8 }}
+          className="max-w-5xl"
+        >
+          <motion.div 
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full mb-8"
+            style={{ 
+              background: `linear-gradient(135deg, ${primaryColor}40, ${secondaryColor}40)`,
+              border: `1px solid ${primaryColor}60`,
+              backdropFilter: "blur(10px)"
+            }}
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+          >
+            <Sparkles size={18} style={{ color: primaryColor }} />
+            <span className="text-sm sm:text-base font-semibold uppercase tracking-wider text-white/90">
+              Sobre la carrera
+            </span>
+          </motion.div>
+          
+          <h1 className="text-4xl sm:text-5xl lg:text-7xl xl:text-8xl font-black text-white drop-shadow-2xl mb-6 leading-tight">
+            {institucion?.institucion_nombre ?? "Universidad Pública de El Alto"}
+          </h1>
+          
+          <p className="text-white/70 text-lg sm:text-xl lg:text-2xl xl:text-3xl max-w-3xl mx-auto font-light">
+            Formando profesionales con propósito
+          </p>
+        </motion.div>
+
+        {portadasFiltradas.length > 1 && (
+          <motion.div 
+            className="absolute bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+          >
+            {portadasFiltradas.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrent(idx)}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  idx === current ? 'w-12' : 'w-4 opacity-50 hover:opacity-100'
+                }`}
+                style={{ 
+                  backgroundColor: idx === current ? primaryColor : 'white',
+                  boxShadow: idx === current ? `0 0 20px ${primaryColor}` : 'none'
+                }}
+                aria-label={`Ir a portada ${idx + 1}`}
+              />
+            ))}
+          </motion.div>
+        )}
+      </div>
+
+      {portadasFiltradas.length > 1 && (
+        <>
+          <motion.button
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5 }}
+            onClick={() => setCurrent((prev) => (prev - 1 + portadasFiltradas.length) % portadasFiltradas.length)}
+            className="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-all backdrop-blur-md border border-white/20 hover:scale-110 hover:border-white/40 shadow-2xl"
+            aria-label="Anterior"
+          >
+            <ChevronLeft size={28} />
+          </motion.button>
+          <motion.button
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5 }}
+            onClick={() => setCurrent((prev) => (prev + 1) % portadasFiltradas.length)}
+            className="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-all backdrop-blur-md border border-white/20 hover:scale-110 hover:border-white/40 shadow-2xl"
+            aria-label="Siguiente"
+          >
+            <ChevronRight size={28} />
+          </motion.button>
+        </>
+      )}
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.8 }}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/60"
+      >
+        <ChevronDown size={40} className="animate-bounce" />
+      </motion.div>
+    </div>
+  );
+}
 
 /* ─── Strip HTML ────────────────────────────────────────────────────── */
 const StripHtml = ({ html }) =>
@@ -43,7 +284,7 @@ function Counter({ to, suffix = "" }) {
   }, [inView, to, count]);
 
   return (
-    <span ref={ref}>
+    <span ref={ref} className="text-2xl font-black" style={{ color: "inherit" }}>
       {display}
       {suffix}
     </span>
@@ -63,7 +304,7 @@ const FloatingDecorator = ({ src, size, x, y, delay, duration = 8, rotate = true
     <motion.img
       src={src}
       alt="decorador"
-      className="absolute pointer-events-none z-0"
+      className="absolute pointer-events-none z-20"
       style={{ 
         width: size, 
         height: 'auto', 
@@ -102,14 +343,18 @@ const SectionIn = ({ children, delay = 0, className = "" }) => (
 const Chip = ({ children, color }) => (
   <span
     className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full"
-    style={{ backgroundColor: `${color}18`, color }}
+    style={{ 
+      backgroundColor: `${color}20`, 
+      color: color,
+      border: `1px solid ${color}40`
+    }}
   >
     <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
     {children}
   </span>
 );
 
-/* ─── Tarjeta de autoridad ───────────────────────────────────────────── */
+/* ─── Tarjeta de autoridad con estilo oscuro ─────────────────────────── */
 function AutoridadCard({ autoridad, index, primaryColor }) {
   const hasPhoto = autoridad.foto_autoridad?.startsWith("http");
 
@@ -127,10 +372,10 @@ function AutoridadCard({ autoridad, index, primaryColor }) {
         style={{ background: `linear-gradient(135deg, ${primaryColor}88, ${primaryColor}22)` }}
       />
 
-      <div className="relative bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm">
+      <div className="relative bg-white/10 backdrop-blur-md rounded-3xl overflow-hidden border border-white/10 shadow-lg hover:border-white/30 transition-colors">
         <div
           className="h-28 relative overflow-hidden"
-          style={{ background: `linear-gradient(135deg, ${primaryColor}15, ${primaryColor}30)` }}
+          style={{ background: `linear-gradient(135deg, ${primaryColor}20, ${primaryColor}40)` }}
         >
           <motion.div
             animate={{ rotate: 360 }}
@@ -160,8 +405,8 @@ function AutoridadCard({ autoridad, index, primaryColor }) {
               }}
             />
             <div
-              className="relative w-32 h-32 rounded-full overflow-hidden ring-4 ring-white shadow-xl flex items-center justify-center bg-white"
-              style={hasPhoto ? {} : { backgroundColor: `${primaryColor}10` }}
+              className="relative w-32 h-32 rounded-full overflow-hidden ring-4 ring-white/20 shadow-xl flex items-center justify-center"
+              style={hasPhoto ? {} : { backgroundColor: `${primaryColor}20` }}
             >
               {hasPhoto ? (
                 <img
@@ -170,7 +415,7 @@ function AutoridadCard({ autoridad, index, primaryColor }) {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <span className="text-3xl font-bold" style={{ color: primaryColor }}>
+                <span className="text-3xl font-bold text-white/80">
                   {getInitials(autoridad.nombre_autoridad)}
                 </span>
               )}
@@ -179,7 +424,7 @@ function AutoridadCard({ autoridad, index, primaryColor }) {
         </div>
 
         <div className="pb-8 px-6 text-center space-y-3">
-          <h3 className="text-lg font-bold text-gray-900 leading-tight">
+          <h3 className="text-lg font-bold text-white leading-tight">
             {autoridad.nombre_autoridad}
           </h3>
 
@@ -190,20 +435,24 @@ function AutoridadCard({ autoridad, index, primaryColor }) {
               viewport={{ once: true }}
               transition={{ delay: index * 0.15 + 0.3 }}
               className="inline-block text-xs font-semibold px-4 py-1.5 rounded-full"
-              style={{ backgroundColor: `${primaryColor}15`, color: primaryColor }}
+              style={{ 
+                backgroundColor: `${primaryColor}25`, 
+                color: primaryColor,
+                border: `1px solid ${primaryColor}40`
+              }}
             >
               {autoridad.cargo_autoridad}
             </motion.span>
           )}
 
           {isValid(autoridad.celular_autoridad) && (
-            <div className="flex items-center justify-center gap-1.5 text-xs text-gray-400 pt-1">
-              <FaPhone size={11} />
+            <div className="flex items-center justify-center gap-1.5 text-xs text-white/60 pt-1">
+              <FaPhone size={11} style={{ color: primaryColor }} />
               <span>{autoridad.celular_autoridad}</span>
             </div>
           )}
 
-          <div className="flex items-center justify-center gap-2 pt-3 border-t border-gray-100">
+          <div className="flex items-center justify-center gap-2 pt-3 border-t border-white/10">
             {isValid(autoridad.facebook_autoridad) && (
               <motion.a
                 whileHover={{ scale: 1.2, y: -2 }}
@@ -211,7 +460,7 @@ function AutoridadCard({ autoridad, index, primaryColor }) {
                 href={autoridad.facebook_autoridad}
                 target="_blank"
                 rel="noreferrer"
-                className="w-9 h-9 rounded-xl flex items-center justify-center bg-gray-50 hover:bg-[#1877f2] hover:text-white text-gray-400 transition-colors duration-200"
+                className="w-9 h-9 rounded-xl flex items-center justify-center bg-white/10 hover:bg-[#1877f2] text-white/70 hover:text-white transition-colors duration-200 border border-white/10"
               >
                 <FaFacebook size={15} />
               </motion.a>
@@ -223,7 +472,7 @@ function AutoridadCard({ autoridad, index, primaryColor }) {
                 href={autoridad.twiter_autoridad}
                 target="_blank"
                 rel="noreferrer"
-                className="w-9 h-9 rounded-xl flex items-center justify-center bg-gray-50 hover:bg-black hover:text-white text-gray-400 transition-colors duration-200"
+                className="w-9 h-9 rounded-xl flex items-center justify-center bg-white/10 hover:bg-black text-white/70 hover:text-white transition-colors duration-200 border border-white/10"
               >
                 <FaXTwitter size={15} />
               </motion.a>
@@ -235,7 +484,7 @@ function AutoridadCard({ autoridad, index, primaryColor }) {
                 href={`https://wa.me/${autoridad.celular_autoridad}`}
                 target="_blank"
                 rel="noreferrer"
-                className="w-9 h-9 rounded-xl flex items-center justify-center bg-gray-50 hover:bg-[#25D366] hover:text-white text-gray-400 transition-colors duration-200"
+                className="w-9 h-9 rounded-xl flex items-center justify-center bg-white/10 hover:bg-[#25D366] text-white/70 hover:text-white transition-colors duration-200 border border-white/10"
               >
                 <FaWhatsapp size={15} />
               </motion.a>
@@ -251,7 +500,7 @@ function AutoridadCard({ autoridad, index, primaryColor }) {
    COMPONENTE PRINCIPAL
 ═══════════════════════════════════════════════════════════════════════ */
 export default function AboutView() {
-  const { institucion, autoridades, loading } = useOutletContext();
+  const { institucion, autoridades, loading, portadas } = useOutletContext();
 
   const colors = institucion?.colorinstitucion?.[0] || {};
   const primaryColor = colors.color_primario || "#e68600";
@@ -270,7 +519,7 @@ export default function AboutView() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-900">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
@@ -282,11 +531,22 @@ export default function AboutView() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 overflow-x-hidden relative">
+    <div className="min-h-screen relative overflow-hidden">
       
-    
+      {/* ─── FONDO OSCURO GLOBAL ────────────────────────────────────────── */}
+      <DarkSmokeBackground primaryColor={primaryColor} secondaryColor={secondaryColor} />
+
+      {/* ─── HERO CON PORTADA PANTALLA COMPLETA ─────────────────────────── */}
+      <PortadaHero 
+        portadas={portadas} 
+        institucion={institucion} 
+        primaryColor={primaryColor} 
+        secondaryColor={secondaryColor}
+      />
+
+
       {/* ══════════════════════════════════════════════════════════════
-          SOBRE LA CARRERA - CON LOGO UPEA
+          SOBRE LA CARRERA - CON ESTILO OSCURO
       ══════════════════════════════════════════════════════════════ */}
       {institucion?.institucion_sobre_ins && (
         <section className="relative py-24 overflow-hidden">
@@ -298,9 +558,19 @@ export default function AboutView() {
                 </SectionIn>
 
                 <SectionIn delay={0.1}>
-                  <h2 className="text-4xl md:text-5xl font-black text-gray-900 leading-tight">
+                  <h2 className="text-4xl md:text-5xl font-black text-white leading-tight">
                     Formando{" "}
-                    <span style={{ color: primaryColor }}>profesionales</span>{" "}
+                    <span 
+                      style={{ 
+                        background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor}, #ffffff)`,
+                        WebkitBackgroundClip: 'text',
+                        backgroundClip: 'text',
+                        color: 'transparent',
+                        textShadow: `0 0 40px ${primaryColor}40`
+                      }}
+                    >
+                      profesionales
+                    </span>{" "}
                     con propósito
                   </h2>
                 </SectionIn>
@@ -308,12 +578,15 @@ export default function AboutView() {
                 <SectionIn delay={0.2}>
                   <div
                     className="w-16 h-1.5 rounded-full"
-                    style={{ background: `linear-gradient(90deg, ${primaryColor}, ${primaryColor}44)` }}
+                    style={{ 
+                      background: `linear-gradient(90deg, ${primaryColor}, ${secondaryColor})`,
+                      boxShadow: `0 0 20px ${primaryColor}60`
+                    }}
                   />
                 </SectionIn>
 
                 <SectionIn delay={0.25}>
-                  <p className="text-gray-600 text-lg leading-relaxed">
+                  <p className="text-white/70 text-lg leading-relaxed">
                     <StripHtml html={institucion.institucion_sobre_ins} />
                   </p>
                 </SectionIn>
@@ -327,19 +600,17 @@ export default function AboutView() {
                     ].map(({ n, suffix, label }) => (
                       <div
                         key={label}
-                        className="rounded-2xl p-4 text-center border border-gray-100 bg-white shadow-sm"
+                        className="rounded-2xl p-4 text-center border border-white/10 bg-white/5 backdrop-blur-sm"
                       >
-                        <div className="text-2xl font-black" style={{ color: primaryColor }}>
-                          <Counter to={n} suffix={suffix} />
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1">{label}</div>
+                        <Counter to={n} suffix={suffix} />
+                        <div className="text-xs text-white/50 mt-1">{label}</div>
                       </div>
                     ))}
                   </div>
                 </SectionIn>
               </div>
 
-              {/* Logos: Institución + UPEA juntos */}
+              {/* Logos: Institución + UPEA juntos con estilo oscuro */}
               <SectionIn delay={0.2} className="flex justify-center">
                 <div className="flex flex-col items-center gap-6">
                   {/* Logo de la institución con anillos */}
@@ -374,14 +645,14 @@ export default function AboutView() {
                     />
                   </div>
                   
-                  {/* Logo UPEA debajo */}
+                  {/* Logo UPEA debajo con estilo oscuro */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5, duration: 0.6 }}
                     className="relative"
                   >
-                    <div className="w-45 h-45 rounded-full bg-white shadow-xl flex items-center justify-center p-2">
+                    <div className="w-45 h-45 rounded-full bg-white/10 backdrop-blur-sm shadow-xl flex items-center justify-center p-2 border border-white/20">
                       <img
                         src="/logo/upeaLogo.png"
                         alt="Logo UPEA"
@@ -400,7 +671,7 @@ export default function AboutView() {
       )}
 
       {/* ══════════════════════════════════════════════════════════════
-          HISTORIA
+          HISTORIA - YA TIENE FONDO OSCURO, SOLO AJUSTES MENORES
       ══════════════════════════════════════════════════════════════ */}
       {institucion?.institucion_historia && (
         <section className="relative py-24 bg-gray-950 text-white overflow-hidden">
@@ -418,7 +689,14 @@ export default function AboutView() {
                 <h2 className="text-4xl font-black leading-tight">
                   Nuestra
                   <br />
-                  <span style={{ color: primaryColor }}>trayectoria</span>
+                  <span style={{ 
+                    background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor}, #ffffff)`,
+                    WebkitBackgroundClip: 'text',
+                    backgroundClip: 'text',
+                    color: 'transparent'
+                  }}>
+                    trayectoria
+                  </span>
                 </h2>
                 <MdOutlineSchool size={80} style={{ color: `${primaryColor}33` }} />
               </SectionIn>
@@ -457,16 +735,14 @@ export default function AboutView() {
       )}
 
       {/* ══════════════════════════════════════════════════════════════
-          MISIÓN & VISIÓN
+          MISIÓN & VISIÓN CON ESTILO OSCURO
       ══════════════════════════════════════════════════════════════ */}
       {(institucion?.institucion_mision || institucion?.institucion_vision) && (
         <section ref={mvRef} className="relative py-24 overflow-hidden">
-       
-
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <SectionIn className="text-center mb-14 space-y-3">
               <Chip color={primaryColor}>Filosofía institucional</Chip>
-              <h2 className="text-4xl font-black text-gray-900">Misión & Visión</h2>
+              <h2 className="text-4xl font-black text-white">Misión & Visión</h2>
             </SectionIn>
 
             <div className="grid md:grid-cols-2 gap-8">
@@ -477,7 +753,7 @@ export default function AboutView() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
                   whileHover={{ scale: 1.02 }}
-                  className="relative bg-white rounded-3xl p-10 shadow-sm border border-gray-100 overflow-hidden group"
+                  className="relative bg-white/10 backdrop-blur-md rounded-3xl p-10 shadow-lg border border-white/10 hover:border-white/30 overflow-hidden group"
                 >
                   <motion.div
                     style={{ x: mvX }}
@@ -490,13 +766,16 @@ export default function AboutView() {
                   >
                     <MdOutlineTrackChanges size={30} style={{ color: primaryColor }} />
                   </div>
-                  <h3 className="text-2xl font-black text-gray-900 mb-4">Misión</h3>
-                  <p className="text-gray-600 leading-relaxed">
+                  <h3 className="text-2xl font-black text-white mb-4">Misión</h3>
+                  <p className="text-white/70 leading-relaxed">
                     <StripHtml html={institucion.institucion_mision} />
                   </p>
                   <div
                     className="absolute bottom-0 left-0 h-1 w-0 group-hover:w-full transition-all duration-700 rounded-b-3xl"
-                    style={{ backgroundColor: primaryColor }}
+                    style={{ 
+                      background: `linear-gradient(90deg, ${primaryColor}, ${secondaryColor})`,
+                      boxShadow: `0 0 10px ${primaryColor}80`
+                    }}
                   />
                 </motion.div>
               )}
@@ -536,21 +815,19 @@ export default function AboutView() {
       )}
 
       {/* ══════════════════════════════════════════════════════════════
-          OBJETIVOS
+          OBJETIVOS CON ESTILO OSCURO
       ══════════════════════════════════════════════════════════════ */}
       {institucion?.institucion_objetivos && (
-        <section className="py-24 bg-white">
-          
+        <section className="py-24">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <SectionIn className="text-center mb-14 space-y-3">
               <Chip color={primaryColor}>Propósito</Chip>
-              <h2 className="text-4xl font-black text-gray-900">Objetivos</h2>
+              <h2 className="text-4xl font-black text-white">Objetivos</h2>
             </SectionIn>
 
             <SectionIn delay={0.2}>
               <div
-                className="max-w-4xl mx-auto relative rounded-3xl p-12 overflow-hidden"
-                style={{ background: `linear-gradient(135deg, ${primaryColor}08, ${primaryColor}18)` }}
+                className="max-w-4xl mx-auto relative rounded-3xl p-12 overflow-hidden bg-white/5 backdrop-blur-md border border-white/10"
               >
                 <motion.div
                   animate={{ rotate: 360 }}
@@ -565,7 +842,7 @@ export default function AboutView() {
                   >
                     <MdOutlineEmojiObjects size={28} style={{ color: primaryColor }} />
                   </div>
-                  <p className="text-gray-700 text-lg leading-relaxed pt-1">
+                  <p className="text-white/70 text-lg leading-relaxed pt-1">
                     <StripHtml html={institucion.institucion_objetivos} />
                   </p>
                 </div>
@@ -576,7 +853,7 @@ export default function AboutView() {
       )}
 
       {/* ══════════════════════════════════════════════════════════════
-          VIDEO INSTITUCIONAL
+          VIDEO INSTITUCIONAL - YA TIENE FONDO OSCURO
       ══════════════════════════════════════════════════════════════ */}
       {institucion?.institucion_link_video_vision && (
         <section className="py-24 bg-gray-950 relative overflow-hidden">
@@ -615,17 +892,15 @@ export default function AboutView() {
       )}
 
       {/* ══════════════════════════════════════════════════════════════
-          AUTORIDADES
+          AUTORIDADES CON ESTILO OSCURO
       ══════════════════════════════════════════════════════════════ */}
       {autoridadesValidas.length > 0 && (
         <section className="relative py-24 overflow-hidden">
-         
-
           <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
             <SectionIn className="mb-16 space-y-4">
               <Chip color={primaryColor}>Equipo directivo</Chip>
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <h2 className="text-4xl md:text-5xl font-black text-gray-900 flex items-center gap-3">
+                <h2 className="text-4xl md:text-5xl font-black text-white flex items-center gap-3">
                   <HiOutlineUserGroup style={{ color: primaryColor }} />
                   Autoridades
                 </h2>
@@ -634,14 +909,21 @@ export default function AboutView() {
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
                   className="text-sm font-semibold px-4 py-2 rounded-full"
-                  style={{ backgroundColor: `${primaryColor}15`, color: primaryColor }}
+                  style={{ 
+                    backgroundColor: `${primaryColor}20`, 
+                    color: primaryColor,
+                    border: `1px solid ${primaryColor}40`
+                  }}
                 >
                   {autoridadesValidas.length} representante{autoridadesValidas.length !== 1 ? "s" : ""}
                 </motion.span>
               </div>
               <div
                 className="h-1 w-20 rounded-full"
-                style={{ background: `linear-gradient(90deg, ${primaryColor}, ${primaryColor}44)` }}
+                style={{ 
+                  background: `linear-gradient(90deg, ${primaryColor}, ${secondaryColor})`,
+                  boxShadow: `0 0 20px ${primaryColor}60`
+                }}
               />
             </SectionIn>
 

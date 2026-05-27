@@ -25,9 +25,9 @@ const IconStar = () => (
 // Frases motivacionales para rotar
 const frasesMotivacionales = [
   "Lema de la Carrera:",
-  "Ingenieria Autotrónica: Innovación que impulsa el futuro.",
-  "Autotronica la mejor carrera de la UPEA.",
-  "innovando el futuro con cada circuito.",
+  "Ingenieria TEXTIL: Innovación que impulsa el futuro.",
+  "Textil la mejor carrera de la UPEA.",
+  "innovando el futuro de produccion .",
 ];
 
 // Componente decorador flotante

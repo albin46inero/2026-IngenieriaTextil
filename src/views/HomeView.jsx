@@ -53,6 +53,13 @@ export default function HomeView() {
         <MarqueeText institucion={institucion} />
       </section>
 
+       {/* 8 — AUTORIDADES */}
+      <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Autoridades autoridades={autoridades} loading={loading} />
+        </div>
+      </section>
+
       {/* 3 — MISIÓN, VISIÓN Y OBJETIVOS (OCUPANDO TODO EL ANCHO) */}
       <section className="py-24 bg-gray-50/70">
         {/* Eliminamos el max-w restrictivo y la grid de 2 columnas para que sea full width */}
@@ -81,12 +88,6 @@ export default function HomeView() {
         </div>
       </section>
 
-      {/* 5 — VIDEO VISIÓN (FONDO OSCURO PARA DESTACAR) */}
-      <section className="py-20 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <VideoVision institucion={institucion} loading={loading} />
-        </div>
-      </section>
 
       {/* 6 — GACETA UNIVERSITARIA */}
       <section className="py-20 bg-gray-50/70">
@@ -102,12 +103,6 @@ export default function HomeView() {
         </div>
       </section>
 
-      {/* 8 — AUTORIDADES */}
-      <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Autoridades autoridades={autoridades} loading={loading} />
-        </div>
-      </section>
 
       {/* 9 — LOGOS INSTITUCIONALES */}
       <section className="py-12 bg-white border-t border-gray-100">

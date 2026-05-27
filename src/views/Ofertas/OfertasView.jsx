@@ -1,11 +1,89 @@
 import { useState, useEffect } from "react";
 import { useOutletContext, Link } from "react-router";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { 
-  Calendar, Sparkles, ChevronRight, 
+  Calendar, Sparkles, ChevronRight, ChevronLeft, ChevronDown,
   Briefcase, Clock, FileText, CheckCircle,
   AlertCircle
 } from "lucide-react";
+
+// ─── FONDO OSCURO CON DEGRADADO Y HUMO ──────────────────────────────────────
+function DarkSmokeBackground({ primaryColor, secondaryColor }) {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Degradado base oscuro con colores institucionales */}
+      <div 
+        className="absolute inset-0"
+        style={{
+          background: `
+            radial-gradient(ellipse at top, ${primaryColor}15 0%, transparent 50%),
+            radial-gradient(ellipse at bottom right, ${secondaryColor}20 0%, transparent 50%),
+            linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 50%, #16213e 100%)
+          `
+        }}
+      />
+
+      {/* Humo 1 - Arriba izquierda */}
+      <motion.div
+        className="absolute w-[800px] h-[800px] rounded-full blur-3xl"
+        style={{
+          background: `radial-gradient(circle, ${primaryColor}25 0%, transparent 70%)`,
+          top: "-20%",
+          left: "-10%"
+        }}
+        animate={{
+          x: [0, 40, 0, -40, 0],
+          y: [0, -30, 0, 30, 0],
+          scale: [1, 1.15, 1, 1.1, 1],
+          opacity: [0.2, 0.35, 0.2, 0.3, 0.2]
+        }}
+        transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      {/* Humo 2 - Abajo derecha */}
+      <motion.div
+        className="absolute w-[700px] h-[700px] rounded-full blur-3xl"
+        style={{
+          background: `radial-gradient(circle, ${secondaryColor}30 0%, transparent 70%)`,
+          bottom: "-15%",
+          right: "-5%"
+        }}
+        animate={{
+          x: [0, -35, 0, 35, 0],
+          y: [0, 40, 0, -40, 0],
+          scale: [1, 1.2, 1, 1.1, 1],
+          opacity: [0.15, 0.3, 0.15, 0.25, 0.15]
+        }}
+        transition={{ duration: 30, repeat: Infinity, ease: "easeInOut", delay: 3 }}
+      />
+
+      {/* Partículas decorativas */}
+      {[...Array(6)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute w-1.5 h-1.5 rounded-full"
+          style={{
+            background: i % 2 === 0 ? primaryColor : secondaryColor,
+            top: `${Math.random() * 100}%`,
+            left: `${Math.random() * 100}%`,
+            opacity: 0.15
+          }}
+          animate={{
+            y: [0, -80, 0],
+            x: [0, Math.random() * 40 - 20, 0],
+            opacity: [0.15, 0.3, 0.15]
+          }}
+          transition={{
+            duration: 12 + Math.random() * 8,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: i * 1.5
+          }}
+        />
+      ))}
+    </div>
+  );
+}
 
 // Componente decorador flotante
 const FloatingDecorator = ({ src, size, x, y, delay, duration = 12, rotate = true, color = null }) => {
@@ -20,7 +98,7 @@ const FloatingDecorator = ({ src, size, x, y, delay, duration = 12, rotate = tru
     <motion.img
       src={src}
       alt="decorador"
-      className="absolute pointer-events-none z-0"
+      className="absolute pointer-events-none z-20"
       style={{ 
         width: size, 
         height: 'auto', 
@@ -50,8 +128,170 @@ function formatFecha(fecha) {
   return `${d.getDate()} ${meses[d.getMonth()]} ${d.getFullYear()}`;
 }
 
+// ─── HERO CON PORTADA PANTALLA COMPLETA ───────────────────────────────────
+function PortadaHero({ portadas = [], institucion, primaryColor, secondaryColor }) {
+  const [current, setCurrent] = useState(0);
+  
+  const portadasFiltradas = portadas.length > 0 ? portadas : [];
+
+  useEffect(() => {
+    if (portadasFiltradas.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % portadasFiltradas.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [portadasFiltradas.length]);
+
+  if (portadasFiltradas.length === 0) {
+    return (
+      <div 
+        className="relative h-screen w-full flex items-center justify-center text-center px-4"
+        style={{ 
+          background: `linear-gradient(135deg, ${primaryColor}20, ${secondaryColor}20)` 
+        }}
+      >
+        <div className="relative z-10 max-w-4xl">
+          <Briefcase size={80} style={{ color: primaryColor }} className="mx-auto mb-6 opacity-60" />
+          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black text-white drop-shadow-2xl mb-6">
+            Ofertas Académicas
+          </h1>
+          <p className="text-white/70 text-xl sm:text-2xl lg:text-3xl">
+            {institucion?.institucion_nombre ?? "Universidad Pública de El Alto"}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative h-screen w-full overflow-hidden">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={current}
+          initial={{ opacity: 0, scale: 1.1 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          transition={{ duration: 0.8 }}
+          className="absolute inset-0"
+        >
+          <img
+            src={portadasFiltradas[current].portada_imagen}
+            alt={portadasFiltradas[current].portada_titulo || "Portada"}
+            className="w-full h-full object-cover"
+          />
+          <div 
+            className="absolute inset-0"
+            style={{
+              background: `
+                linear-gradient(180deg, 
+                  rgba(15,15,15,0.3) 0%, 
+                  rgba(26,26,46,0.6) 50%, 
+                  rgba(15,15,15,0.95) 100%
+                ),
+                radial-gradient(ellipse at bottom, ${primaryColor}50 0%, transparent 70%)
+              `
+            }}
+          />
+        </motion.div>
+      </AnimatePresence>
+
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.8 }}
+          className="max-w-5xl"
+        >
+          <motion.div 
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full mb-8"
+            style={{ 
+              background: `linear-gradient(135deg, ${primaryColor}40, ${secondaryColor}40)`,
+              border: `1px solid ${primaryColor}60`,
+              backdropFilter: "blur(10px)"
+            }}
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+          >
+            <Briefcase size={18} style={{ color: primaryColor }} />
+            <span className="text-sm sm:text-base font-semibold uppercase tracking-wider text-white/90">
+              Oportunidades
+            </span>
+          </motion.div>
+          
+          <h1 className="text-4xl sm:text-5xl lg:text-7xl xl:text-8xl font-black text-white drop-shadow-2xl mb-6 leading-tight">
+            Ofertas Académicas
+          </h1>
+          
+          <p className="text-white/70 text-lg sm:text-xl lg:text-2xl xl:text-3xl max-w-3xl mx-auto font-light">
+            {institucion?.institucion_nombre ?? "Universidad Pública de El Alto"}
+          </p>
+        </motion.div>
+
+        {portadasFiltradas.length > 1 && (
+          <motion.div 
+            className="absolute bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+          >
+            {portadasFiltradas.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrent(idx)}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  idx === current ? 'w-12' : 'w-4 opacity-50 hover:opacity-100'
+                }`}
+                style={{ 
+                  backgroundColor: idx === current ? primaryColor : 'white',
+                  boxShadow: idx === current ? `0 0 20px ${primaryColor}` : 'none'
+                }}
+                aria-label={`Ir a portada ${idx + 1}`}
+              />
+            ))}
+          </motion.div>
+        )}
+      </div>
+
+      {portadasFiltradas.length > 1 && (
+        <>
+          <motion.button
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5 }}
+            onClick={() => setCurrent((prev) => (prev - 1 + portadasFiltradas.length) % portadasFiltradas.length)}
+            className="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-all backdrop-blur-md border border-white/20 hover:scale-110 hover:border-white/40 shadow-2xl"
+            aria-label="Anterior"
+          >
+            <ChevronLeft size={28} />
+          </motion.button>
+          <motion.button
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5 }}
+            onClick={() => setCurrent((prev) => (prev + 1) % portadasFiltradas.length)}
+            className="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-all backdrop-blur-md border border-white/20 hover:scale-110 hover:border-white/40 shadow-2xl"
+            aria-label="Siguiente"
+          >
+            <ChevronRight size={28} />
+          </motion.button>
+        </>
+      )}
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.8 }}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/60"
+      >
+        <ChevronDown size={40} className="animate-bounce" />
+      </motion.div>
+    </div>
+  );
+}
+
 export default function OfertasView() {
-  const { ofertas, loading, institucion } = useOutletContext();
+  const { ofertas, loading, institucion, portadas } = useOutletContext(); // ← Agregamos portadas
   const [filteredItems, setFilteredItems] = useState([]);
 
   const descripcion = institucion?.Descripcion || institucion;
@@ -63,11 +303,7 @@ export default function OfertasView() {
     if (!ofertas) return;
     
     let filtered = [...ofertas];
-    
-    // Filtrar solo activos (ofertas_estado === 1)
     filtered = filtered.filter(item => item.ofertas_estado === 1);
-    
-    // Ordenar por ID más reciente
     filtered.sort((a, b) => b.ofertas_id - a.ofertas_id);
     
     setFilteredItems(filtered);
@@ -75,7 +311,7 @@ export default function OfertasView() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-900">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
@@ -87,48 +323,68 @@ export default function OfertasView() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden">
       
-      
+      {/* ─── FONDO OSCURO GLOBAL ────────────────────────────────────────── */}
+      <DarkSmokeBackground primaryColor={primaryColor} secondaryColor={secondaryColor} />
 
+      {/* ─── HERO CON PORTADA PANTALLA COMPLETA ─────────────────────────── */}
+      <PortadaHero 
+        portadas={portadas} 
+        institucion={institucion} 
+        primaryColor={primaryColor} 
+        secondaryColor={secondaryColor}
+      />
+
+
+
+      {/* Contenido principal */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
         
-        {/* Encabezado */}
+        {/* ─── ENCABEZADO CON ESTILO OSCURO ─────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="text-center mb-8 sm:mb-12"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-4"
+               style={{ 
+                 background: `linear-gradient(135deg, ${primaryColor}20, ${secondaryColor}20)`,
+                 border: `1px solid ${primaryColor}40`
+               }}>
             <Briefcase size={14} style={{ color: primaryColor }} />
-            <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: primaryColor }}>
+            <span className="text-xs font-semibold uppercase tracking-wider text-white/90">
               Oportunidades
             </span>
           </div>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-800">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold">
             <span className="relative inline-block">
               <span 
                 className="relative z-10"
                 style={{ 
-                  background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
+                  background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor}, #ffffff)`,
                   WebkitBackgroundClip: 'text',
                   backgroundClip: 'text',
-                  color: 'transparent'
+                  color: 'transparent',
+                  textShadow: `0 0 40px ${primaryColor}40`
                 }}
               >
                 Ofertas Académicas
               </span>
               <motion.div 
                 className="absolute -bottom-2 left-0 right-0 h-1 rounded-full"
-                style={{ background: `linear-gradient(90deg, ${primaryColor}, ${secondaryColor})` }}
+                style={{ 
+                  background: `linear-gradient(90deg, ${primaryColor}, ${secondaryColor})`,
+                  boxShadow: `0 0 20px ${primaryColor}60`
+                }}
                 initial={{ width: 0 }}
                 animate={{ width: "100%" }}
                 transition={{ delay: 0.3, duration: 0.6 }}
               />
             </span>
           </h1>
-          <p className="text-gray-500 mt-3 text-sm max-w-2xl mx-auto">
+          <p className="text-white/60 mt-3 text-sm max-w-2xl mx-auto">
             Oportunidades académicas, becas y programas especiales
           </p>
         </motion.div>
@@ -140,10 +396,10 @@ export default function OfertasView() {
             animate={{ opacity: 1 }}
             className="text-center py-20"
           >
-            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
-              <Briefcase size={32} className="text-gray-300" />
+            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/10">
+              <Briefcase size={32} className="text-white/40" />
             </div>
-            <p className="text-gray-500">No hay ofertas académicas disponibles</p>
+            <p className="text-white/60">No hay ofertas académicas disponibles</p>
           </motion.div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -162,10 +418,10 @@ export default function OfertasView() {
                 >
                   <Link
                     to={`/ofertas/${item.ofertas_id}`}
-                    className="block bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 h-full flex flex-col cursor-pointer"
+                    className="block bg-white/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-white/10 hover:border-white/30 h-full flex flex-col cursor-pointer"
                   >
                     {/* Imagen */}
-                    <div className="relative h-48 overflow-hidden bg-gray-100">
+                    <div className="relative h-48 overflow-hidden bg-black/20">
                       {item.ofertas_imagen && item.ofertas_imagen.startsWith('http') ? (
                         <>
                           <img
@@ -173,28 +429,25 @@ export default function OfertasView() {
                             alt={item.ofertas_titulo}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-90" />
                         </>
                       ) : (
                         <div 
                           className="w-full h-full flex items-center justify-center"
-                          style={{ background: `linear-gradient(135deg, ${primaryColor}10, ${secondaryColor}10)` }}
+                          style={{ background: `linear-gradient(135deg, ${primaryColor}20, ${secondaryColor}20)` }}
                         >
-                          <Briefcase size={48} style={{ color: primaryColor }} className="opacity-30" />
+                          <Briefcase size={48} style={{ color: primaryColor }} className="opacity-40" />
                         </div>
                       )}
                       
-                      {/* Badge ID */}
-
-
                       {/* Badge estado */}
                       {isActive && (
-                        <span className="absolute top-3 right-3 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-md">
+                        <span className="absolute top-3 right-3 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg border border-white/20">
                           INSCRIPCIONES ABIERTAS
                         </span>
                       )}
                       {isExpired && (
-                        <span className="absolute top-3 right-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-md">
+                        <span className="absolute top-3 right-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg border border-white/20">
                           FINALIZADO
                         </span>
                       )}
@@ -202,23 +455,23 @@ export default function OfertasView() {
 
                     {/* Contenido */}
                     <div className="p-4 flex-1 flex flex-col">
-                      <h3 className="font-bold text-gray-800 text-base mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                      <h3 className="font-bold text-white text-base mb-2 line-clamp-2 group-hover:text-white transition-colors drop-shadow-sm">
                         {item.ofertas_titulo}
                       </h3>
                       
                       {/* Fechas de inscripción */}
                       <div className="space-y-1.5 mb-3">
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                          <Calendar size={12} />
+                        <div className="flex items-center gap-2 text-xs text-white/60">
+                          <Calendar size={12} style={{ color: primaryColor }} />
                           <span>Inscripciones: {formatFecha(item.ofertas_inscripciones_ini)}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                          <Clock size={12} />
+                        <div className="flex items-center gap-2 text-xs text-white/60">
+                          <Clock size={12} style={{ color: primaryColor }} />
                           <span>Hasta: {formatFecha(item.ofertas_inscripciones_fin)}</span>
                         </div>
                         {item.ofertas_fecha_examen && (
-                          <div className="flex items-center gap-2 text-xs text-gray-500">
-                            <FileText size={12} />
+                          <div className="flex items-center gap-2 text-xs text-white/60">
+                            <FileText size={12} style={{ color: primaryColor }} />
                             <span>Examen: {formatFecha(item.ofertas_fecha_examen)}</span>
                           </div>
                         )}
@@ -226,24 +479,27 @@ export default function OfertasView() {
 
                       {/* Descripción corta */}
                       {item.ofertas_descripcion && (
-                        <p className="text-xs text-gray-500 line-clamp-2 mb-3">
+                        <p className="text-xs text-white/50 line-clamp-2 mb-3">
                           {item.ofertas_descripcion.substring(0, 100)}...
                         </p>
                       )}
 
                       {/* Indicador de clic */}
-                      <div className="mt-auto flex items-center justify-end pt-2 border-t border-gray-100">
+                      <div className="mt-auto flex items-center justify-end pt-2 border-t border-white/10">
                         <span className="flex items-center gap-1 text-xs font-medium transition-all duration-300 group-hover:translate-x-1" style={{ color: primaryColor }}>
                           <span>Ver detalles</span>
-                          <ChevronRight size={12} />
+                          <ChevronRight size={12} style={{ color: primaryColor }} />
                         </span>
                       </div>
                     </div>
 
-                    {/* Barra inferior animada */}
+                    {/* Barra inferior animada con glow */}
                     <motion.div 
                       className="h-0.5 w-0 group-hover:w-full transition-all duration-500"
-                      style={{ background: `linear-gradient(90deg, ${primaryColor}, ${secondaryColor})` }}
+                      style={{ 
+                        background: `linear-gradient(90deg, ${primaryColor}, ${secondaryColor})`,
+                        boxShadow: `0 0 10px ${primaryColor}80`
+                      }}
                     />
                   </Link>
                 </motion.div>
@@ -252,7 +508,7 @@ export default function OfertasView() {
           </div>
         )}
 
-        {/* Contador */}
+        {/* Contador con estilo oscuro */}
         {filteredItems.length > 0 && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -260,7 +516,8 @@ export default function OfertasView() {
             transition={{ delay: 0.3 }}
             className="text-center mt-8"
           >
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-white/40 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 backdrop-blur-sm border border-white/10">
+              <Briefcase size={14} style={{ color: primaryColor }} />
               Mostrando {filteredItems.length} {filteredItems.length === 1 ? "oferta" : "ofertas"} disponibles
             </p>
           </motion.div>
