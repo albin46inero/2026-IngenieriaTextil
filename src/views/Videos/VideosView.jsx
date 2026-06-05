@@ -9,6 +9,20 @@ import {
 } from "lucide-react";
 import { FaYoutube } from "react-icons/fa";
 
+// 🔧 CAMBIO 1: Centralizar URLs externas en un objeto constante
+const EXTERNAL_URLS = {
+  YOUTUBE: {
+    THUMBNAIL: (videoId, quality = 'mqdefault') => 
+      `https://img.youtube.com/vi/${videoId}/${quality}.jpg`,
+    EMBED: (videoId) => `https://www.youtube.com/embed/${videoId}`,
+    PATTERNS: [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?#]+)/,
+      /youtube\.com\/embed\/([^/?]+)/,
+      /youtube\.com\/v\/([^/?]+)/
+    ]
+  }
+};
+
 // ─── FONDO OSCURO CON DEGRADADO Y HUMO ──────────────────────────────────────
 function DarkSmokeBackground({ primaryColor, secondaryColor }) {
   return (
@@ -122,33 +136,28 @@ const FloatingDecorator = ({ src, size, x, y, delay, duration = 12, rotate = tru
   );
 };
 
-// Extraer ID de YouTube de diferentes formatos de URL
+// 🔧 CAMBIO 2: Funciones que usan las URLs centralizadas
 function getYouTubeId(url) {
   if (!url) return null;
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?#]+)/,
-    /youtube\.com\/embed\/([^/?]+)/,
-    /youtube\.com\/v\/([^/?]+)/
-  ];
-  for (const pattern of patterns) {
+  for (const pattern of EXTERNAL_URLS.YOUTUBE.PATTERNS) {
     const match = url.match(pattern);
     if (match) return match[1];
   }
   return null;
 }
 
-// Obtener URL de miniatura de YouTube
 function getYouTubeThumbnail(url, quality = 'mqdefault') {
   const videoId = getYouTubeId(url);
   if (!videoId) return null;
-  return `https://img.youtube.com/vi/${videoId}/${quality}.jpg`;
+  // 🔧 Usa la URL centralizada
+  return EXTERNAL_URLS.YOUTUBE.THUMBNAIL(videoId, quality);
 }
 
-// Obtener URL embed de YouTube
 function getYouTubeEmbedUrl(url) {
   const videoId = getYouTubeId(url);
   if (!videoId) return null;
-  return `https://www.youtube.com/embed/${videoId}`;
+  // 🔧 Usa la URL centralizada
+  return EXTERNAL_URLS.YOUTUBE.EMBED(videoId);
 }
 
 // Obtener estilo por tipo de video
@@ -345,7 +354,7 @@ function PortadaHero({ portadas = [], institucion, primaryColor, secondaryColor 
 }
 
 export default function VideosView() {
-  const { videos, loading, institucion, portadas } = useOutletContext(); // ← Agregamos portadas
+  const { videos, loading, institucion, portadas } = useOutletContext();
   const [filteredItems, setFilteredItems] = useState([]);
   const [hoveredId, setHoveredId] = useState(null);
 
@@ -389,8 +398,6 @@ export default function VideosView() {
         primaryColor={primaryColor} 
         secondaryColor={secondaryColor}
       />
-
-   
 
       {/* Contenido principal */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">

@@ -10,12 +10,33 @@ import {
 } from "lucide-react";
 import { FaFacebook, FaTwitter, FaYoutube, FaWhatsapp } from "react-icons/fa";
 
+// 🔧 CAMBIO 1: Centralizar URLs externas en un objeto constante
+const EXTERNAL_URLS = {
+  LEAFLET: {
+    CDN: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/',
+    ICONS: {
+      RETINA: 'marker-icon-2x.png',
+      DEFAULT: 'marker-icon.png',
+      SHADOW: 'marker-shadow.png'
+    }
+  },
+  OPENSTREETMAP: {
+    NOMINATIM: 'https://nominatim.openstreetmap.org/search',
+    TILES: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    ATTRIBUTION: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  },
+  GOOGLE: {
+    MAPS_SEARCH: 'https://www.google.com/maps/search/?api=1&query='
+  }
+};
+
 // Fix para los íconos de Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  // 🔧 CAMBIO 2: Usar URLs centralizadas para Leaflet
+  iconRetinaUrl: `${EXTERNAL_URLS.LEAFLET.CDN}images/${EXTERNAL_URLS.LEAFLET.ICONS.RETINA}`,
+  iconUrl: `${EXTERNAL_URLS.LEAFLET.CDN}images/${EXTERNAL_URLS.LEAFLET.ICONS.DEFAULT}`,
+  shadowUrl: `${EXTERNAL_URLS.LEAFLET.CDN}images/${EXTERNAL_URLS.LEAFLET.ICONS.SHADOW}`,
 });
 
 // ─── CACHÉ DE COORDENADAS ─────────────────────────────────────────────────────
@@ -140,47 +161,56 @@ export default function ContactView() {
   const secondaryColor = colors.color_secundario || "#a75c06";
 
   // ── Geocodificación con caché localStorage ────────────────────────────────
-  useEffect(() => {
-    if (loading) return;
+  // ── Geocodificación con caché localStorage ────────────────────────────────
+useEffect(() => {
+  if (loading) return;
 
-    const direccion = institucion?.institucion_direccion
-      || "Edificio del Área Social, 4to Piso. Av. Sucre, Zona Villa Esperanza, El Alto, Bolivia";
+  const direccion = institucion?.institucion_direccion
+    || "Edificio del Área Social, 4to Piso. Av. Sucre, Zona Villa Esperanza, El Alto, Bolivia";
 
-    // 1️⃣ Intentar leer del caché primero
-    const cached = getCachedCoords(direccion);
-    if (cached) {
-      // ✅ Caché hit — sin llamada a Nominatim
-      setMapPosition(cached);
-      setMapLoading(false);
-      return;
-    }
+  // 1️⃣ Intentar leer del caché primero
+  const cached = getCachedCoords(direccion);
+  if (cached) {
+    // ✅ Caché hit — sin llamada a Nominatim
+    setMapPosition(cached);
+    setMapLoading(false);
+    return;
+  }
 
-    // 2️⃣ Caché miss — llamar a Nominatim UNA sola vez y guardar resultado
-    const geocodeAddress = async () => {
-      try {
-        setMapLoading(true);
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(direccion)}&format=json&limit=1`,
-          { headers: { "Accept-Language": "es" } }
-        );
-        const data = await response.json();
-
-        if (data?.[0]) {
-          const coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-          setMapPosition(coords);
-          // Guardar en caché para evitar futuras peticiones
-          setCachedCoords(direccion, coords);
+  // 2️⃣ Caché miss — llamar a Nominatim UNA sola vez y guardar resultado
+  const geocodeAddress = async () => {
+    try {
+      setMapLoading(true);
+      
+      // 🔧 CAMBIO: Agregar header User-Agent (requerido por Nominatim)
+      const response = await fetch(
+        `${EXTERNAL_URLS.OPENSTREETMAP.NOMINATIM}?q=${encodeURIComponent(direccion)}&format=json&limit=1`,
+        { 
+          headers: { 
+            "Accept-Language": "es",
+            // 🔧 User-Agent identifica tu aplicación (requerido por OpenStreetMap)
+            "User-Agent": "UniversidadPublicaDeElAlto/1.0 (Contacto: info@upea.bo)"
+          } 
         }
-      } catch (error) {
-        console.error("Error geocodificando dirección:", error);
-        // Mantener coordenadas por defecto si falla
-      } finally {
-        setMapLoading(false);
-      }
-    };
+      );
+      const data = await response.json();
 
-    geocodeAddress();
-  }, [institucion, loading]);
+      if (data?.[0]) {
+        const coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+        setMapPosition(coords);
+        // Guardar en caché para evitar futuras peticiones
+        setCachedCoords(direccion, coords);
+      }
+    } catch (error) {
+      console.error("Error geocodificando dirección:", error);
+      // Mantener coordenadas por defecto si falla
+    } finally {
+      setMapLoading(false);
+    }
+  };
+
+  geocodeAddress();
+}, [institucion, loading]);
 
   // ── Loading global ────────────────────────────────────────────────────────
   if (loading) {
@@ -199,7 +229,6 @@ export default function ContactView() {
   return (
     <div className="min-h-screen bg-gray-50 overflow-x-hidden relative">
 
-     
       {/* ─── HERO ───────────────────────────────────────────────────────────── */}
       <section className="relative h-[320] md:h-[360px] lg:h-[400px] w-full overflow-hidden">
         {portadas && portadas.length > 0 && portadas[0]?.portada_imagen ? (
@@ -407,8 +436,10 @@ export default function ContactView() {
                   className="z-0"
                 >
                   <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    // 🔧 CAMBIO 4: Usar URL centralizada para OpenStreetMap tiles
+                    url={EXTERNAL_URLS.OPENSTREETMAP.TILES}
+                    // 🔧 CAMBIO 5: Usar atribución centralizada
+                    attribution={EXTERNAL_URLS.OPENSTREETMAP.ATTRIBUTION}
                   />
                   <Marker position={mapPosition}>
                     <Popup>
@@ -424,7 +455,8 @@ export default function ContactView() {
           <SectionIn delay={0.3} className="text-center mt-6">
             <motion.a
               whileHover={{ scale: 1.05 }}
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(institucion?.institucion_direccion || "Edificio del Área Social, 4to Piso. Av. Sucre, Zona Villa Esperanza, El Alto, Bolivia")}`}
+              // 🔧 CAMBIO 6: Usar URL centralizada para Google Maps
+              href={`${EXTERNAL_URLS.GOOGLE.MAPS_SEARCH}${encodeURIComponent(institucion?.institucion_direccion || "Edificio del Área Social, 4to Piso. Av. Sucre, Zona Villa Esperanza, El Alto, Bolivia")}`}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300"

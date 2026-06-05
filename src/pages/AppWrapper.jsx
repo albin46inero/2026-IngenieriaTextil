@@ -11,7 +11,7 @@ import {
 
 // ─── Favicon y título por defecto (antes de que responda la API) ───────────
 const FAVICON_DEFAULT = "/logo/upeaLogo_1.ico";
-const TITLE_DEFAULT   = "Psicología — UPEA";
+const TITLE_DEFAULT   = "Ingeniería Textil — UPEA"; // ✅ Actualizado
 
 // ─── Aplica favicon en el <head> ───────────────────────────────────────────
 function setFavicon(href) {
@@ -35,7 +35,6 @@ function applyColors(colores) {
   root.style.setProperty("--color-primary",       p);
   root.style.setProperty("--color-secondary",     s);
   root.style.setProperty("--color-tertiary",      t);
-  // Variantes de opacidad para efectos hover, sombras y glows
   root.style.setProperty("--color-primary-light", `${p}cc`);
   root.style.setProperty("--color-primary-dark",  `${p}99`);
   root.style.setProperty("--color-primary-glow",  `${p}40`);
@@ -44,37 +43,30 @@ function applyColors(colores) {
 }
 
 export default function AppWrapper() {
-  // ─── getPrincipal ──────────────────────────────────────────────────────
   const [institucion, setInstitucion] = useState(null);
-
-  // ─── getContenido ──────────────────────────────────────────────────────
   const [portadas,    setPortadas]    = useState([]);
   const [autoridades, setAutoridades] = useState([]);
   const [ubicacion,   setUbicacion]   = useState(null);
   const [videos,      setVideos]      = useState([]);
-
-  // ─── getRecursos ───────────────────────────────────────────────────────
   const [publicaciones, setPublicaciones] = useState([]);
   const [linksExternos, setLinksExternos] = useState([]);
-
-  // ─── getGacetaEventos ──────────────────────────────────────────────────
   const [convocatorias, setConvocatorias] = useState([]);
   const [cursos,        setCursos]        = useState([]);
   const [eventos,       setEventos]       = useState([]);
   const [gaceta,        setGaceta]        = useState([]);
   const [ofertas,       setOfertas]       = useState([]);
   const [servicios,     setServicios]     = useState([]);
-
-  // ─── Estado de carga ───────────────────────────────────────────────────
   const [loading, setLoading] = useState(true);
 
-  // ─── Favicon e título por defecto al montar ────────────────────────────
   useEffect(() => {
     setFavicon(FAVICON_DEFAULT);
     document.title = TITLE_DEFAULT;
   }, []);
 
+  // ✅ HALLAZGO 1 SOLUCIONADO: AbortController para cancelar peticiones
   useEffect(() => {
+    const abortController = new AbortController();
+    
     const fetchAll = async () => {
       try {
         const [resPrincipal, resContenido, resRecursos, resGacetaEventos] =
@@ -85,61 +77,63 @@ export default function AppWrapper() {
             getGacetaEventos(),
           ]);
 
-        // ── getPrincipal ──────────────────────────────────────────────
-        const info = resPrincipal.data?.Descripcion;
-        if (info) {
-          setInstitucion(info);
+        // Verificar si el componente sigue montado antes de actualizar
+        if (!abortController.signal.aborted) {
+          const info = resPrincipal.data?.Descripcion;
+          if (info) {
+            setInstitucion(info);
+            applyColors(info.colorinstitucion?.[0]);
 
-          // 1. Colores dinámicos
-          applyColors(info.colorinstitucion?.[0]);
+            if (info.institucion_logo) {
+              setFavicon(info.institucion_logo);
+              console.log("🖼️ Favicon actualizado desde API:", info.institucion_logo);
+            } else {
+              console.log("🖼️ Favicon usando default:", FAVICON_DEFAULT);
+            }
 
-          // 2. Favicon — si la API devuelve logo lo usamos, sino queda el default
-          if (info.institucion_logo) {
-            setFavicon(info.institucion_logo);
-            console.log("🖼️ Favicon actualizado desde API:", info.institucion_logo);
-          } else {
-            console.log("🖼️ Favicon usando default:", FAVICON_DEFAULT);
+            if (info.institucion_nombre) {
+              document.title = `${info.institucion_nombre} — UPEA`;
+            }
           }
 
-          // 3. Título de la pestaña
-          if (info.institucion_nombre) {
-            document.title = `${info.institucion_nombre} — UPEA`;
-          }
+          const contenido = resContenido.data;
+          setPortadas(contenido?.portada         || []);
+          setAutoridades(contenido?.autoridad    || []);
+          setUbicacion(contenido?.ubicacion?.[0] || null);
+          setVideos(contenido?.upea_videos       || []);
+
+          const recursos = resRecursos.data;
+          setPublicaciones(recursos?.upea_publicaciones  || []);
+          setLinksExternos(recursos?.linksExternoInterno || []);
+
+          const ge = resGacetaEventos.data;
+          setConvocatorias(ge?.convocatorias              || []);
+          setCursos(ge?.cursos                            || []);
+          setEventos(ge?.upea_evento                      || []);
+          setGaceta(ge?.upea_gaceta_universitaria         || []);
+          setOfertas(ge?.ofertasAcademicas                || []);
+          setServicios(ge?.serviciosCarrera               || []);
         }
 
-        // ── getContenido ──────────────────────────────────────────────
-        const contenido = resContenido.data;
-        setPortadas(contenido?.portada         || []);
-        setAutoridades(contenido?.autoridad    || []);
-        setUbicacion(contenido?.ubicacion?.[0] || null);
-        setVideos(contenido?.upea_videos       || []);
-
-        // ── getRecursos ───────────────────────────────────────────────
-        const recursos = resRecursos.data;
-        setPublicaciones(recursos?.upea_publicaciones  || []);
-        setLinksExternos(recursos?.linksExternoInterno || []);
-
-        // ── getGacetaEventos ──────────────────────────────────────────
-        const ge = resGacetaEventos.data;
-        setConvocatorias(ge?.convocatorias              || []);
-        setCursos(ge?.cursos                            || []);
-        setEventos(ge?.upea_evento                      || []);
-        setGaceta(ge?.upea_gaceta_universitaria         || []);
-        setOfertas(ge?.ofertasAcademicas                || []);
-        setServicios(ge?.serviciosCarrera               || []);
-
       } catch (error) {
-        console.error("❌ Error al cargar datos:", error);
-        // Favicon y colores por defecto ya están aplicados — no se rompe nada
+        if (!abortController.signal.aborted) {
+          console.error("❌ Error al cargar datos:", error);
+        }
       } finally {
-        setLoading(false);
+        if (!abortController.signal.aborted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchAll();
+    
+    // Función de limpieza - cancela peticiones al desmontar
+    return () => {
+      abortController.abort();
+    };
   }, []);
 
-  // ─── Context para todas las vistas hijas via useOutletContext() ────────
   const context = {
     loading,
     institucion,

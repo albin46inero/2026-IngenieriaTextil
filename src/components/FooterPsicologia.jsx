@@ -3,6 +3,12 @@ import { Mail, Phone, MapPin, ExternalLink } from "lucide-react";
 import { motion } from "motion/react";
 import utic from "/logo/utic.png";
 
+// 🔧 CAMBIO 1: Centralizar URLs externas en un objeto constante
+const EXTERNAL_URLS = {
+  UTIC: 'https://utic.upea.bo/',
+  LINKEDIN_ALBIERY: 'https://www.linkedin.com/in/albieri-laura-308686397/'
+};
+
 const FacebookIcon = ({ size = 24 }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
     <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
@@ -96,7 +102,8 @@ export default function FooterPsicologia({ institucion, loading }) {
 
                   {/* Logo UTIC */}
                   <motion.a
-                    href="https://utic.upea.bo/"
+                    // 🔧 CAMBIO 2: Usar URL centralizada para UTIC
+                    href={EXTERNAL_URLS.UTIC}
                     target="_blank"
                     rel="noreferrer"
                     whileHover={{ scale: 1.08, rotate: -2 }}
@@ -264,7 +271,8 @@ export default function FooterPsicologia({ institucion, loading }) {
             <p className="flex flex-wrap items-center justify-center gap-1.5 text-center">
               <span>Desarrollado por</span>
               <a
-                href="https://utic.upea.bo/"
+                // 🔧 CAMBIO 3: Usar URL centralizada para UTIC
+                href={EXTERNAL_URLS.UTIC}
                 target="_blank"
                 rel="noreferrer"
                 className="font-semibold text-primary hover:text-white transition-colors hover:underline underline-offset-2"
@@ -273,7 +281,8 @@ export default function FooterPsicologia({ institucion, loading }) {
               </a>
               <span className="text-gray-600">·</span>
               <a
-                href="https://www.linkedin.com/in/albieri-laura-308686397/"
+                // 🔧 CAMBIO 4: Usar URL centralizada para LinkedIn
+                href={EXTERNAL_URLS.LINKEDIN_ALBIERY}
                 target="_blank"
                 rel="noreferrer"
                 className="font-semibold text-primary hover:text-white transition-colors hover:underline underline-offset-2"
