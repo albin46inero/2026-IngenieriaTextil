@@ -1,83 +1,91 @@
 import { createBrowserRouter } from "react-router";
+import { lazy, Suspense } from "react";
 
 import AppWrapper from "../pages/AppWrapper";
 import Page404 from "../pages/404Page";
 import ErrorNetwork from "../pages/ErrorNetwork";
 
-import HomeView from "../views/HomeView";
-import AboutView from "../views/AboutView";
-import ContactView from "../views/ContactView";
+// 🔥 Vistas con lazy loading (se cargan bajo demanda)
+const HomeView = lazy(() => import("../views/HomeView"));
+const AboutView = lazy(() => import("../views/AboutView"));
+const ContactView = lazy(() => import("../views/ContactView"));
 
-import ConvocatoriasView from "../views/Convocatorias/ConvocatoriasView";
-import DetalleConvocatoria from "../views/Convocatorias/DetalleConvocatoria";
+const ConvocatoriasView = lazy(() => import("../views/Convocatorias/ConvocatoriasView"));
+const DetalleConvocatoria = lazy(() => import("../views/Convocatorias/DetalleConvocatoria"));
 
-import CursosView from "../views/Cursos/CursosView";
-import DetalleCurso from "../views/Cursos/DetalleCurso";
+const CursosView = lazy(() => import("../views/Cursos/CursosView"));
+const DetalleCurso = lazy(() => import("../views/Cursos/DetalleCurso"));
 
-import EventosView from "../views/Eventos/EventosView";
-import DetalleEvento from "../views/Eventos/DetalleEvento";
+const EventosView = lazy(() => import("../views/Eventos/EventosView"));
+const DetalleEvento = lazy(() => import("../views/Eventos/DetalleEvento"));
 
-import GacetaView from "../views/Gaceta/GacetaView";
-import DetalleGaceta from "../views/Gaceta/DetalleGaceta";
+const GacetaView = lazy(() => import("../views/Gaceta/GacetaView"));
+const DetalleGaceta = lazy(() => import("../views/Gaceta/DetalleGaceta"));
 
-import OfertasView from "../views/Ofertas/OfertasView";
-import DetalleOferta from "../views/Ofertas/DetalleOferta";
+const OfertasView = lazy(() => import("../views/Ofertas/OfertasView"));
+const DetalleOferta = lazy(() => import("../views/Ofertas/DetalleOferta"));
 
-import PublicacionesView from "../views/Publicaciones/PublicacionesView";
-import DetallePublicacion from "../views/Publicaciones/DetallePublicacion";
+const PublicacionesView = lazy(() => import("../views/Publicaciones/PublicacionesView"));
+const DetallePublicacion = lazy(() => import("../views/Publicaciones/DetallePublicacion"));
 
-import ServiciosView from "../views/Servicios/ServiciosView";
-import DetalleServicio from "../views/Servicios/DetalleServicio";
+const ServiciosView = lazy(() => import("../views/Servicios/ServiciosView"));
+const DetalleServicio = lazy(() => import("../views/Servicios/DetalleServicio"));
 
-import VideosView from "../views/Videos/VideosView";
-import DetalleVideo from "../views/Videos/DetalleVideo";
+const VideosView = lazy(() => import("../views/Videos/VideosView"));
+const DetalleVideo = lazy(() => import("../views/Videos/DetalleVideo"));
+
+// Componente envoltorio para Suspense (se puede usar directamente en el router)
+const SuspenseWrapper = ({ children }) => (
+  <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Cargando...</div>}>
+    {children}
+  </Suspense>
+);
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <AppWrapper />,
     children: [
-      { index: true, element: <HomeView /> },
-      { path: "about", element: <AboutView /> },
-      { path: "contacto", element: <ContactView /> },
-      { path: "error-red", element: <ErrorNetwork /> },
+      { index: true, element: <SuspenseWrapper><HomeView /></SuspenseWrapper> },
+      { path: "about", element: <SuspenseWrapper><AboutView /></SuspenseWrapper> },
+      { path: "contacto", element: <SuspenseWrapper><ContactView /></SuspenseWrapper> },
+      { path: "error-red", element: <ErrorNetwork /> }, // no necesita lazy
 
       {
         path: "convocatorias",
-        element: <ConvocatoriasView tipo="CONVOCATORIAS" />,
+        element: <SuspenseWrapper><ConvocatoriasView tipo="CONVOCATORIAS" /></SuspenseWrapper>,
       },
       {
         path: "convocatorias/avisos",
-        element: <ConvocatoriasView tipo="AVISOS" />,
+        element: <SuspenseWrapper><ConvocatoriasView tipo="AVISOS" /></SuspenseWrapper>,
       },
       {
         path: "convocatorias/comunicados",
-        element: <ConvocatoriasView tipo="COMUNICADOS" />,
+        element: <SuspenseWrapper><ConvocatoriasView tipo="COMUNICADOS" /></SuspenseWrapper>,
       },
-      { path: "convocatorias/:id", element: <DetalleConvocatoria /> },
+      { path: "convocatorias/:id", element: <SuspenseWrapper><DetalleConvocatoria /></SuspenseWrapper> },
 
-      // Cursos
-      { path: "cursos", element: <CursosView tipo="CURSOS" /> },
-      { path: "cursos/seminarios", element: <CursosView tipo="SEMINARIOS" /> },
-      { path: "cursos/:id", element: <DetalleCurso /> },
+      { path: "cursos", element: <SuspenseWrapper><CursosView tipo="CURSOS" /></SuspenseWrapper> },
+      { path: "cursos/seminarios", element: <SuspenseWrapper><CursosView tipo="SEMINARIOS" /></SuspenseWrapper> },
+      { path: "cursos/:id", element: <SuspenseWrapper><DetalleCurso /></SuspenseWrapper> },
       
-      { path: "eventos", element: <EventosView /> },
-      { path: "eventos/:id", element: <DetalleEvento /> },
+      { path: "eventos", element: <SuspenseWrapper><EventosView /></SuspenseWrapper> },
+      { path: "eventos/:id", element: <SuspenseWrapper><DetalleEvento /></SuspenseWrapper> },
 
-      { path: "gaceta", element: <GacetaView /> },
-      { path: "gaceta/:id", element: <DetalleGaceta /> },
+      { path: "gaceta", element: <SuspenseWrapper><GacetaView /></SuspenseWrapper> },
+      { path: "gaceta/:id", element: <SuspenseWrapper><DetalleGaceta /></SuspenseWrapper> },
 
-      { path: "ofertas", element: <OfertasView /> },
-      { path: "ofertas/:id", element: <DetalleOferta /> },
+      { path: "ofertas", element: <SuspenseWrapper><OfertasView /></SuspenseWrapper> },
+      { path: "ofertas/:id", element: <SuspenseWrapper><DetalleOferta /></SuspenseWrapper> },
 
-      { path: "publicaciones", element: <PublicacionesView /> },
-      { path: "publicaciones/:id", element: <DetallePublicacion /> },
+      { path: "publicaciones", element: <SuspenseWrapper><PublicacionesView /></SuspenseWrapper> },
+      { path: "publicaciones/:id", element: <SuspenseWrapper><DetallePublicacion /></SuspenseWrapper> },
 
-      { path: "servicios", element: <ServiciosView /> },
-      { path: "servicios/:id", element: <DetalleServicio /> },
+      { path: "servicios", element: <SuspenseWrapper><ServiciosView /></SuspenseWrapper> },
+      { path: "servicios/:id", element: <SuspenseWrapper><DetalleServicio /></SuspenseWrapper> },
 
-      { path: "videos", element: <VideosView /> },
-      { path: "videos/:id", element: <DetalleVideo /> },
+      { path: "videos", element: <SuspenseWrapper><VideosView /></SuspenseWrapper> },
+      { path: "videos/:id", element: <SuspenseWrapper><DetalleVideo /></SuspenseWrapper> },
 
       { path: "*", element: <Page404 /> },
     ],

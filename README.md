@@ -1,6 +1,6 @@
-# Sitio Web de la Carrera de Psicologia
+# Sitio Web de la Carrera de ingenieria textil
 
-Proyecto React + Vite para los sitio web de la carrera de Psicologia de la Upea
+Proyecto React + Vite para los sitio web de la carrera de ingenieria textil de la Upea
 
 > **Nota** Este proyecto fue desarrollado con React 19 y Vite. Antes de probar, asegúrate de tener Node.js instalado, copiar el archivo `.env` con los valores correctos, y ejecutar `npm install` para instalar las dependencias.
 

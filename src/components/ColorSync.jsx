@@ -20,12 +20,6 @@ const ColorSync = ({ institucion }) => {
       document.documentElement.style.setProperty('--color-primary-light', `${primaryColor}cc`);
       document.documentElement.style.setProperty('--color-primary-dark', `${primaryColor}99`);
       document.documentElement.style.setProperty('--color-primary-glow', `${primaryColor}40`);
-      
-      console.log('🎨 Colores sincronizados desde API:', {
-        primary: primaryColor,
-        secondary: secondaryColor,
-        tertiary: tertiaryColor
-      });
     }
   }, [institucion]);
 

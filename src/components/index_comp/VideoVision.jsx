@@ -2,6 +2,36 @@ import { motion } from "motion/react";
 import { Sparkles, Clock, Award, ExternalLink } from "lucide-react";
 
 /**
+ * Convierte cualquier URL de YouTube a formato embed
+ * @param {string} url - URL de YouTube (watch, youtu.be, o embed)
+ * @returns {string} - URL embed válida para iframe
+ */
+function getYouTubeEmbedUrl(url) {
+  if (!url) return '';
+  // Si ya es una URL embed, la devolvemos tal cual (pero aseguramos parámetros)
+  if (url.includes('/embed/')) {
+    // Asegurar parámetros útiles
+    const hasQuery = url.includes('?');
+    return url + (hasQuery ? '&' : '?') + 'autoplay=0&rel=0&modestbranding=1';
+  }
+  
+  // Extraer ID de YouTube desde distintos formatos
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?#]+)/,
+    /youtube\.com\/embed\/([^/?]+)/,
+    /youtube\.com\/v\/([^/?]+)/
+  ];
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match && match[1]) {
+      return `https://www.youtube.com/embed/${match[1]}?autoplay=0&rel=0&modestbranding=1`;
+    }
+  }
+  // Si no es una URL de YouTube reconocida, devolvemos la original (puede fallar)
+  return url;
+}
+
+/**
  * VideoVision
  * Props:
  *   institucion {object} — datos de getPrincipal()
@@ -9,6 +39,7 @@ import { Sparkles, Clock, Award, ExternalLink } from "lucide-react";
  */
 export default function VideoVision({ institucion, loading }) {
   const videoUrl = institucion?.institucion_link_video_vision;
+  const embedUrl = getYouTubeEmbedUrl(videoUrl);
   
   // Obtener colores de la API
   const descripcion = institucion?.Descripcion || institucion;
@@ -33,6 +64,7 @@ export default function VideoVision({ institucion, loading }) {
     );
   }
 
+  // No mostrar la sección si no hay URL de video
   if (!videoUrl) return null;
 
   return (
@@ -147,7 +179,7 @@ export default function VideoVision({ institucion, loading }) {
               <div className="relative rounded-xl overflow-hidden shadow-2xl bg-black">
                 <div className="w-full" style={{ aspectRatio: '16/9' }}>
                   <iframe
-                    src={videoUrl}
+                    src={embedUrl}
                     title={`Video visión — ${institucion?.institucion_nombre}`}
                     frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

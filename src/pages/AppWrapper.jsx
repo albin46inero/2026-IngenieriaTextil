@@ -39,7 +39,6 @@ function applyColors(colores) {
   root.style.setProperty("--color-primary-dark",  `${p}99`);
   root.style.setProperty("--color-primary-glow",  `${p}40`);
 
-  console.log("🎨 Colores aplicados:", { primary: p, secondary: s, tertiary: t });
 }
 
 export default function AppWrapper() {
@@ -83,13 +82,6 @@ export default function AppWrapper() {
           if (info) {
             setInstitucion(info);
             applyColors(info.colorinstitucion?.[0]);
-
-            if (info.institucion_logo) {
-              setFavicon(info.institucion_logo);
-              console.log("🖼️ Favicon actualizado desde API:", info.institucion_logo);
-            } else {
-              console.log("🖼️ Favicon usando default:", FAVICON_DEFAULT);
-            }
 
             if (info.institucion_nombre) {
               document.title = `${info.institucion_nombre} — UPEA`;
